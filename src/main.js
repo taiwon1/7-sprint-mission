@@ -1,4 +1,3 @@
-import "dotenv/config";
 import express from 'express';
 import cors from 'cors';
 import path from 'path';
@@ -7,7 +6,6 @@ import articlesRouter from './routers/articlesRouter.js';
 import productsRouter from './routers/productsRouter.js';
 import commentsRouter from './routers/commentsRouter.js';
 import imagesRouter from './routers/imagesRouter.js';
-import usersRouter from "./routers/usersRouter.js";
 import { defaultNotFoundHandler, globalErrorHandler } from './controllers/errorController.js';
 
 const app = express();
@@ -20,7 +18,6 @@ app.use('/articles', articlesRouter);
 app.use('/products', productsRouter);
 app.use('/comments', commentsRouter);
 app.use('/images', imagesRouter);
-app.use('/users', usersRouter);
 
 app.use(defaultNotFoundHandler);
 app.use(globalErrorHandler);

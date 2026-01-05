@@ -7,16 +7,11 @@ import { IdParamsStruct } from '../structs/commonStructs.js';
 export async function updateComment(req, res) {
   const { id } = create(req.params, IdParamsStruct);
   const { content } = create(req.body, UpdateCommentBodyStruct);
-  const userId = req.user.id;
 
   const existingComment = await prismaClient.comment.findUnique({ where: { id } });
   if (!existingComment) {
     throw new NotFoundError('comment', id);
   }
-
-  if (Number(existingComment.userId) !== Number(userId)) {
-      return res.status(403).json({ message: "본인이 작성한 댓글만 수정할 수 있습니다." });
-    }
 
   const updatedComment = await prismaClient.comment.update({
     where: { id },
@@ -28,15 +23,10 @@ export async function updateComment(req, res) {
 
 export async function deleteComment(req, res) {
   const { id } = create(req.params, IdParamsStruct);
-  const userId = req.user.id;
 
   const existingComment = await prismaClient.comment.findUnique({ where: { id } });
   if (!existingComment) {
     throw new NotFoundError('comment', id);
-  }
-
-  if (Number(existingComment.userId) !== Number(userId)) {
-    return res.status(403).json({ message: "본인이 작성한 댓글만 삭제할 수 있습니다." });
   }
 
   await prismaClient.comment.delete({ where: { id } });
