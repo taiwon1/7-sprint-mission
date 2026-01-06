@@ -25,13 +25,72 @@ export async function createProduct(req, res) {
 
 export async function getProduct(req, res) {
   const { id } = create(req.params, IdParamsStruct);
+  const userId = req.user?.id; // authMiddleware를 거쳤다면 존재함
 
-  const product = await prismaClient.product.findUnique({ where: { id } });
+  const product = await prismaClient.product.findUnique({ 
+    where: { id },
+    include: {
+      _count: {
+        select: { likes: true } // 💡 상품에 달린 총 좋아요 수 카운트
+      }
+    }
+  });
+
   if (!product) {
     throw new NotFoundError('product', id);
   }
 
-  return res.send(product);
+  // 🛡️ 로그인 상태라면 본인이 좋아요를 눌렀는지 확인
+  let isLiked = false;
+  if (userId) {
+    const like = await prismaClient.like.findFirst({
+      where: {
+        userId: Number(userId),
+        productId: id,
+      },
+    });
+    isLiked = !!like;
+  }
+
+  return res.send({
+    ...product,
+    likeCount: product._count.likes,
+    isLiked,
+  });
+}
+
+// 2. 상품 좋아요 토글 기능 (toggleProductLike 추가)
+export async function toggleProductLike(req, res) {
+  const { id: productId } = create(req.params, IdParamsStruct);
+  const userId = req.user.id;
+
+  const product = await prismaClient.product.findUnique({ where: { id: productId } });
+  if (!product) throw new NotFoundError('product', productId);
+
+  // 기존 좋아요 기록 확인
+  const existingLike = await prismaClient.like.findFirst({
+    where: {
+      userId: Number(userId),
+      productId: productId,
+    },
+  });
+
+  if (existingLike) {
+    // ❌ 이미 있다면 좋아요 취소
+    await prismaClient.like.delete({
+      where: { id: existingLike.id },
+    });
+    return res.json({ isLiked: false });
+  } else {
+    // ❤️ 없다면 좋아요 등록
+    await prismaClient.like.create({
+      data: {
+        user: { connect: { id: Number(userId) } },
+        product: { connect: { id: productId } },
+      },
+    });
+    return res.json({ isLiked: true });
+  }
 }
 
 export async function updateProduct(req, res) {

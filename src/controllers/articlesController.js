@@ -28,13 +28,74 @@ export async function createArticle(req, res) {
 
 export async function getArticle(req, res) {
   const { id } = create(req.params, IdParamsStruct);
+  const userId = req.user?.id; // authMiddleware가 적용된 경우에만 존재
 
-  const article = await prismaClient.article.findUnique({ where: { id } });
+  const article = await prismaClient.article.findUnique({ 
+    where: { id },
+    include: {
+      _count: {
+        select: { likes: true } // 💡 전체 좋아요 개수 포함
+      }
+    }
+  });
+
   if (!article) {
     throw new NotFoundError('article', id);
   }
 
-  return res.send(article);
+  // 🛡️ 로그인 상태라면 본인이 좋아요를 눌렀는지 확인
+  let isLiked = false;
+  if (userId) {
+    const like = await prismaClient.like.findFirst({
+      where: {
+        userId: Number(userId),
+        articleId: id,
+      },
+    });
+    isLiked = !!like;
+  }
+
+  // 기존 article 데이터에 좋아요 정보 합쳐서 반환
+  return res.send({
+    ...article,
+    likeCount: article._count.likes,
+    isLiked,
+  });
+}
+
+// 2. 게시글 좋아요 토글 기능 추가
+export async function toggleArticleLike(req, res) {
+  const { id: articleId } = create(req.params, IdParamsStruct);
+  const userId = req.user.id;
+
+  // 게시글 존재 확인
+  const article = await prismaClient.article.findUnique({ where: { id: articleId } });
+  if (!article) throw new NotFoundError('article', articleId);
+
+  // 좋아요 기록 확인 (복합 유니크 키 사용 시 findUnique 가능)
+  const existingLike = await prismaClient.like.findFirst({
+    where: {
+      userId: Number(userId),
+      articleId: articleId,
+    },
+  });
+
+  if (existingLike) {
+    // 이미 있다면 취소
+    await prismaClient.like.delete({
+      where: { id: existingLike.id },
+    });
+    return res.json({ isLiked: false });
+  } else {
+    // 없다면 좋아요 등록
+    await prismaClient.like.create({
+      data: {
+        user: { connect: { id: Number(userId) } },
+        article: { connect: { id: articleId } },
+      },
+    });
+    return res.json({ isLiked: true });
+  }
 }
 
 export async function updateArticle(req, res) {

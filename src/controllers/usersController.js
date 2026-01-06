@@ -156,3 +156,25 @@ export const getMyProducts = async (req, res) => {
 
   res.json(products);
 };
+
+export const getMyLikedProducts = async (req, res) => {
+  const userId = req.user.id;
+
+  const likedData = await prismaClient.like.findMany({
+    where: { 
+      userId: Number(userId),
+      productId: { not: null } // 상품 좋아요만 필터링
+    },
+    include: {
+      product: true // 상품 상세 정보 포함
+    },
+    orderBy: { 
+      createdAt: 'desc' 
+    }
+  });
+
+  // Like 객체에서 product 필드만 추출하여 배열로 반환
+  const result = likedData.map((item) => item.product);
+  
+  return res.json(result);
+};

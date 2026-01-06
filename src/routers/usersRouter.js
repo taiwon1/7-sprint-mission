@@ -8,7 +8,6 @@ const usersRouter = express.Router();
 // --- 🔓 공용 API (인증 불필요) ---
 usersRouter.post('/signup', withAsync(usersController.signUp));
 usersRouter.post('/signin', withAsync(usersController.signIn));
-usersRouter.post('/refresh', withAsync(usersController.refresh));
 
 // --- 🔒 마이페이지 API (인증 필수) ---
 // 아래 기능들은 유효한 JWT 토큰이 있어야만 접근 가능합니다.

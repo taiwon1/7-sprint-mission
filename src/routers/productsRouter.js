@@ -9,6 +9,7 @@ import {
   getProductList,
   createComment,
   getCommentList,
+  toggleProductLike
 } from '../controllers/productsController.js';
 import { authMiddleware } from '../lib/authMiddleware.js';
 
@@ -20,6 +21,7 @@ productsRouter.get('/:id', withAsync(getProduct));
 
 // ✅ 수정: authMiddleware는 withAsync로 감싸지 않고 그대로 넣습니다.
 productsRouter.post('/', authMiddleware, withAsync(createProduct));
+productsRouter.post('/:id/like', authMiddleware, withAsync(toggleProductLike));
 
 // ✅ 수정: 상품 수정 및 삭제도 마찬가지입니다.
 productsRouter.patch('/:id', authMiddleware, withAsync(updateProduct));

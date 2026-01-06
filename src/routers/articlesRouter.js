@@ -8,6 +8,7 @@ import {
   deleteArticle,
   createComment,
   getCommentList,
+  toggleArticleLike
 } from '../controllers/articlesController.js';
 // 1. 인증 미들웨어 임포트
 import { authMiddleware } from '../lib/authMiddleware.js';
@@ -16,6 +17,7 @@ const articlesRouter = express.Router();
 
 // 2. 게시글 등록: 로그인 필수
 articlesRouter.post('/', authMiddleware, withAsync(createArticle));
+articlesRouter.post('/:id/like', authMiddleware, withAsync(toggleArticleLike));
 
 // 게시글 목록 및 상세 조회: 인증 필요 없음
 articlesRouter.get('/', withAsync(getArticleList));

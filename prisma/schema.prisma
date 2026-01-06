@@ -84,6 +84,8 @@ model Like {
   article   Article? @relation(fields: [articleId], references: [id], onDelete: Cascade)
   articleId Int?
 
+  createdAt DateTime @default(now())
+
   @@unique([userId, productId])
   @@unique([userId, articleId])
 }
