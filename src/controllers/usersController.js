@@ -5,6 +5,11 @@ import { BadRequestError } from '../lib/errors/BadRequestError.js';
 
 export const signUp = async (req, res) => {
   const { email, nickname, password } = req.body;
+
+  if (!email || !nickname || !password) {
+    throw new BadRequestError('이메일, 닉네임, 비밀번호는 필수입니다.');
+  }
+  
   const existingUser = await prismaClient.user.findUnique({ where: { email } });
   if (existingUser) throw new BadRequestError('이미 사용 중인 이메일입니다.');
 

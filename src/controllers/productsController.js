@@ -83,3 +83,40 @@ export const toggleProductLike = async (req, res) => {
     res.json({ isLiked: true });
   }
 };
+
+export const createComment = async (req, res) => {
+  const { id: productId } = create(req.params, IdParamsStruct);
+  const { content } = create(req.body, CreateCommentBodyStruct);
+
+  const product = await prismaClient.product.findUnique({ where: { id: productId } });
+  if (!product) throw new NotFoundError('product', productId);
+
+  const comment = await prismaClient.comment.create({
+    data: {
+      content,
+      product: { connect: { id: productId } },
+      user: { connect: { id: req.user.id } },
+    },
+  });
+  res.status(201).json(comment);
+};
+
+export const getCommentList = async (req, res) => {
+  const { id: productId } = create(req.params, IdParamsStruct);
+  const { cursor, limit } = create(req.query, GetCommentListParamsStruct);
+
+  const product = await prismaClient.product.findUnique({ where: { id: productId } });
+  if (!product) throw new NotFoundError('product', productId);
+
+  const commentsWithCursor = await prismaClient.comment.findMany({
+    cursor: cursor ? { id: cursor } : undefined,
+    take: limit + 1,
+    where: { productId },
+    orderBy: { createdAt: 'desc' },
+  });
+
+  const list = commentsWithCursor.slice(0, limit);
+  const nextCursor = commentsWithCursor.length > limit ? commentsWithCursor[limit].id : null;
+
+  res.json({ list, nextCursor });
+};
