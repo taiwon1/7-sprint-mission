@@ -1,5 +1,5 @@
 import { StructError } from 'superstruct';
-import BadRequestError from '../lib/errors/BadRequestError.js';
+import {BadRequestError} from '../lib/errors/BadRequestError.js';
 import NotFoundError from '../lib/errors/NotFoundError.js';
 
 export function defaultNotFoundHandler(req, res, next) {

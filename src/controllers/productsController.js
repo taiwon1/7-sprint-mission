@@ -1,6 +1,7 @@
 import { create } from 'superstruct';
 import { prismaClient } from '../lib/prismaClient.js';
 import NotFoundError from '../lib/errors/NotFoundError.js';
+import { BadRequestError } from '../lib/errors/BadRequestError.js'; // 추가
 import { IdParamsStruct } from '../structs/commonStructs.js';
 import {
   CreateProductBodyStruct,
@@ -11,9 +12,12 @@ import { CreateCommentBodyStruct, GetCommentListParamsStruct } from '../structs/
 
 export async function createProduct(req, res) {
   const { name, description, price, tags, images } = create(req.body, CreateProductBodyStruct);
+  
+  // 1. 로그인한 유저의 ID를 userId(작성자)로 함께 저장
+  const userId = req.user.id; 
 
   const product = await prismaClient.product.create({
-    data: { name, description, price, tags, images },
+    data: { name, description, price, tags, images, userId },
   });
 
   res.status(201).send(product);
@@ -39,6 +43,11 @@ export async function updateProduct(req, res) {
     throw new NotFoundError('product', id);
   }
 
+  // 2. 본인 확인: 상품의 userId와 로그인한 유저의 ID 비교
+  if (existingProduct.userId !== req.user.id) {
+    throw new BadRequestError('본인이 등록한 상품만 수정할 수 있습니다.');
+  }
+
   const updatedProduct = await prismaClient.product.update({
     where: { id },
     data: { name, description, price, tags, images },
@@ -53,6 +62,11 @@ export async function deleteProduct(req, res) {
 
   if (!existingProduct) {
     throw new NotFoundError('product', id);
+  }
+
+  // 3. 본인 확인: 상품의 userId와 로그인한 유저의 ID 비교
+  if (existingProduct.userId !== req.user.id) {
+    throw new BadRequestError('본인이 등록한 상품만 삭제할 수 있습니다.');
   }
 
   await prismaClient.product.delete({ where: { id } });
@@ -91,7 +105,12 @@ export async function createComment(req, res) {
     throw new NotFoundError('product', productId);
   }
 
-  const comment = await prismaClient.comment.create({ data: { productId, content } });
+  // 4. 댓글 작성자 정보 추가
+  const userId = req.user.id;
+
+  const comment = await prismaClient.comment.create({ 
+    data: { productId, content, userId } 
+  });
 
   return res.status(201).send(comment);
 }
