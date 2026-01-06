@@ -73,3 +73,86 @@ export const signIn = async (req, res) => {
     },
   });
 };
+
+// 3. 내 정보 조회 (Me)
+export const getMe = async (req, res) => {
+  const userId = req.user.id; // authMiddleware에서 넣어준 유저 정보
+
+  const user = await prismaClient.user.findUnique({
+    where: { id: Number(userId) },
+    select: {
+      id: true,
+      email: true,
+      nickname: true,
+      image: true, // 프로필 이미지
+      createdAt: true,
+      updatedAt: true,
+    },
+  });
+
+  res.json(user);
+};
+
+// 4. 내 정보 수정 (Update Profile)
+export const updateMe = async (req, res) => {
+  const userId = req.user.id;
+  const { nickname, image } = req.body;
+
+  const updatedUser = await prismaClient.user.update({
+    where: { id: Number(userId) },
+    data: {
+      nickname,
+      image,
+    },
+    select: {
+      id: true,
+      email: true,
+      nickname: true,
+      image: true,
+    },
+  });
+
+  res.json(updatedUser);
+};
+
+// 5. 비밀번호 변경 (Change Password)
+export const changePassword = async (req, res) => {
+  const userId = req.user.id;
+  const { currentPassword, newPassword } = req.body;
+
+  if (!currentPassword || !newPassword) {
+    throw new BadRequestError('현재 비밀번호와 새 비밀번호를 모두 입력해주세요.');
+  }
+
+  // DB에서 현재 유저 정보 가져오기
+  const user = await prismaClient.user.findUnique({
+    where: { id: Number(userId) },
+  });
+
+  // 현재 비밀번호 검증
+  const isMatch = await bcrypt.compare(currentPassword, user.password);
+  if (!isMatch) {
+    throw new BadRequestError('현재 비밀번호가 일치하지 않습니다.');
+  }
+
+  // 새 비밀번호 해싱 후 업데이트
+  const hashedPassword = await bcrypt.hash(newPassword, 10);
+  await prismaClient.user.update({
+    where: { id: Number(userId) },
+    data: { password: hashedPassword },
+  });
+
+  res.status(204).send(); // 204 No Content
+};
+
+// 6. 내가 등록한 상품 목록 조회
+export const getMyProducts = async (req, res) => {
+  const userId = req.user.id;
+
+  const products = await prismaClient.product.findMany({
+    where: { userId: Number(userId) },
+    orderBy: { created_at: 'desc' },
+  });
+
+  res.json(products);
+};
