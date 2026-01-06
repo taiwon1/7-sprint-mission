@@ -2,6 +2,9 @@
 
 이번 미션에서는 토큰 기반의 유저 인증(Authentication)과 권한 관리(Authorization)를 구현하고, Prisma를 사용하여 복잡한 관계형 데이터 모델을 다룹니다.
 
+## 👷 프로젝트 설계도
+노션PAGE https://www.notion.so/SPRINT4-2e09eb10fd74801db6d7d74a552cc61b?source=copy_link
+
 ---
 
 ## 🎯 미션 목표
@@ -17,7 +20,7 @@
 - [x] **User 스키마 작성**: `id`, `email`, `nickname`, `image`, `password`, `createdAt`, `updatedAt` 필드 구성
 - [x] **회원가입 API**: `email`, `nickname`, `password` 입력 및 비밀번호 해싱(bcrypt) 저장
 - [x] **로그인 API**: 성공 시 Access Token(JWT) 발급
-- [ ] **(심화) 토큰 갱신**: Refresh Token을 활용한 Access Token 재발급 기능
+- [x] **(심화) 토큰 갱신**: Refresh Token을 활용한 Access Token 재발급 기능
 
 ### 2. 인가 및 권한 관리 (Authorization)
 - [x] **상품(Product) 권한**
