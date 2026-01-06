@@ -3,13 +3,10 @@ import { authMiddleware } from '../lib/authMiddleware.js';
 import { withAsync } from '../lib/withAsync.js';
 import { toggleProductLike, getMyLikedProducts } from '../controllers/likesController.js';
 
-const likesRouter = express.Router();
+const router = express.Router();
+router.use(authMiddleware);
 
-likesRouter.use(authMiddleware);
+router.post('/products/:productId', withAsync(toggleProductLike));
+router.get('/my/products', withAsync(getMyLikedProducts));
 
-// 상품 좋아요 토글
-likesRouter.post('/products/:productId', withAsync(toggleProductLike));
-// 내가 좋아요 한 목록
-likesRouter.get('/my/products', withAsync(getMyProducts));
-
-export default likesRouter;
+export default router;
