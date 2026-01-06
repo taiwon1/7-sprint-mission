@@ -10,38 +10,80 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
+  // url = env("DATABASE_URL")
 }
 
 model Article {
-  id             Int       @id @default(autoincrement())
-  title          String
-  content        String
-  image          String?
+  id      Int     @id @default(autoincrement())
+  title   String
+  content String
+  image   String?
+
+  user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId Int
+
   ArticleComment Comment[]
+  likes          Like[]
   createdAt      DateTime  @default(now())
   updatedAt      DateTime  @updatedAt
 }
 
 model Product {
-  id             Int       @id @default(autoincrement())
-  name           String
-  description    String
-  price          Int
-  tags           String[]
-  images         String[]
+  id          Int      @id @default(autoincrement())
+  name        String
+  description String
+  price       Int
+  tags        String[]
+  images      String[]
+
+  user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId Int
+
   ProductComment Comment[]
+  likes          Like[]
   createdAt      DateTime  @default(now())
   updatedAt      DateTime  @updatedAt
 }
 
 model Comment {
-  id        Int      @id @default(autoincrement())
-  content   String
+  id      Int    @id @default(autoincrement())
+  content String
+
+  user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId Int
+
   product   Product? @relation(fields: [productId], references: [id], onDelete: Cascade)
   productId Int?
   article   Article? @relation(fields: [articleId], references: [id], onDelete: Cascade)
   articleId Int?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+model User {
+  id        Int      @id @default(autoincrement())
+  email     String   @unique
+  nickname  String
+  image     String?
+  password  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  articles Article[]
+  products Product[]
+  comments Comment[]
+  likes    Like[]
+}
+
+model Like {
+  id        Int      @id @default(autoincrement())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    Int
+  product   Product? @relation(fields: [productId], references: [id], onDelete: Cascade)
+  productId Int?
+  article   Article? @relation(fields: [articleId], references: [id], onDelete: Cascade)
+  articleId Int?
+
+  @@unique([userId, productId])
+  @@unique([userId, articleId])
 }
