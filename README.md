@@ -5,7 +5,7 @@
 ---
 
 ## 🎯 미션 목표
-- [ ] 토큰 기반 유저 인증/인가 구현하기 (JWT)
+- [x] 토큰 기반 유저 인증/인가 구현하기 (JWT)
 - [ ] (심화) Refresh Token을 이용한 토큰 갱신 구현하기
 - [ ] (심화) Prisma를 활용한 다대다(N:M) 관계 및 유저 관계 설정하기
 
@@ -14,15 +14,15 @@
 ## 🛠️ 기능 구현 체크리스트
 
 ### 1. 인증 및 회원가입 (Authentication)
-- [ ] **User 스키마 작성**: `id`, `email`, `nickname`, `image`, `password`, `createdAt`, `updatedAt` 필드 구성
-- [ ] **회원가입 API**: `email`, `nickname`, `password` 입력 및 비밀번호 해싱(bcrypt) 저장
-- [ ] **로그인 API**: 성공 시 Access Token(JWT) 발급
+- [x] **User 스키마 작성**: `id`, `email`, `nickname`, `image`, `password`, `createdAt`, `updatedAt` 필드 구성
+- [x] **회원가입 API**: `email`, `nickname`, `password` 입력 및 비밀번호 해싱(bcrypt) 저장
+- [x] **로그인 API**: 성공 시 Access Token(JWT) 발급
 - [ ] **(심화) 토큰 갱신**: Refresh Token을 활용한 Access Token 재발급 기능
 
 ### 2. 인가 및 권한 관리 (Authorization)
-- [ ] **상품(Product) 권한**
-    - [ ] 로그인한 유저만 상품 등록 가능
-    - [ ] 본인이 등록한 상품만 수정 및 삭제 가능
+- [x] **상품(Product) 권한**
+    - [x] 로그인한 유저만 상품 등록 가능
+    - [x] 본인이 등록한 상품만 수정 및 삭제 가능
 - [ ] **게시글(Article) 권한**
     - [ ] 로그인한 유저만 게시글 등록 가능
     - [ ] 본인이 등록한 게시글만 수정 및 삭제 가능
