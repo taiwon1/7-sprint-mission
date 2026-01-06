@@ -39,39 +39,62 @@ export const signUp = async (req, res) => {
   res.status(201).json(user);
 };
 
-// 2. 로그인 (SignIn) - 추가된 부분
+// 2. 로그인 (SignIn) - 업데이트
 export const signIn = async (req, res) => {
   const { email, password } = req.body;
 
-  if (!email || !password) {
-    throw new BadRequestError('이메일과 비밀번호를 입력해주세요.');
-  }
-
-  // 유저 찾기
-  const user = await prismaClient.user.findUnique({
-    where: { email },
-  });
-
-  // 유저가 없거나 비밀번호가 틀린 경우 (보안을 위해 에러 메시지는 동일하게 처리)
+  const user = await prismaClient.user.findUnique({ where: { email } });
   if (!user || !(await bcrypt.compare(password, user.password))) {
     throw new BadRequestError('이메일 또는 비밀번호가 일치하지 않습니다.');
   }
 
-  // Access Token 발급
-  const accessToken = jwt.sign(
-    { userId: user.id }, // payload: 유저 식별 정보
-    process.env.JWT_SECRET, // 환경 변수에 저장한 비밀키
-    { expiresIn: '2h' } // 유효기간 2시간
-  );
+  // 💡 1. Access Token 발급 (수명 짧게: 2시간)
+  const accessToken = jwt.sign({ userId: user.id }, process.env.JWT_SECRET, { expiresIn: '2h' });
+
+  // 💡 2. Refresh Token 발급 (수명 길게: 7일)
+  const refreshToken = jwt.sign({ userId: user.id }, process.env.JWT_REFRESH_SECRET, { expiresIn: '7d' });
+
+  // 💡 3. DB에 Refresh Token 저장 (나중에 검증용)
+  await prismaClient.user.update({
+    where: { id: user.id },
+    data: { refreshToken },
+  });
 
   res.json({
     accessToken,
-    user: {
-      id: user.id,
-      email: user.email,
-      nickname: user.nickname,
-    },
+    refreshToken, // 클라이언트에게 둘 다 전달
+    user: { id: user.id, email: user.email, nickname: user.nickname },
   });
+};
+
+// 💡 3. 토큰 갱신 (Refresh) - 추가
+export const refresh = async (req, res) => {
+  const { refreshToken } = req.body;
+
+  if (!refreshToken) {
+    throw new BadRequestError('Refresh Token이 필요합니다.');
+  }
+
+  try {
+    // 1. Refresh Token 검증
+    const payload = jwt.verify(refreshToken, process.env.JWT_REFRESH_SECRET);
+    
+    // 2. DB에 저장된 토큰과 일치하는지 확인
+    const user = await prismaClient.user.findUnique({
+      where: { id: payload.userId },
+    });
+
+    if (!user || user.refreshToken !== refreshToken) {
+      return res.status(401).json({ message: '유효하지 않은 Refresh Token입니다.' });
+    }
+
+    // 3. 새로운 Access Token 발급
+    const newAccessToken = jwt.sign({ userId: user.id }, process.env.JWT_SECRET, { expiresIn: '2h' });
+
+    res.json({ accessToken: newAccessToken });
+  } catch (error) {
+    return res.status(401).json({ message: 'Refresh Token이 만료되었거나 유효하지 않습니다.' });
+  }
 };
 
 // 3. 내 정보 조회 (Me)
