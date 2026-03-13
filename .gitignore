@@ -5,6 +5,7 @@ node_modules/
 !.env.example
 build/
 coverage/
+*.pem
 
 # Uploaded files
 public/*
