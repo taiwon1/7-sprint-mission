@@ -4,7 +4,7 @@ on:
   pull_request:
     branches:
       - main
-      - sprint11
+      - sprint10
 
 jobs:
   test:
